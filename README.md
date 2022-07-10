@@ -1,5 +1,8 @@
 # go-vpk
+
+[![GoDoc](https://godoc.org/github.com/NublyBR/go-vpk?status.png)](http://godoc.org/github.com/NublyBR/go-vpk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/NublyBR/go-vpk)](https://goreportcard.com/report/github.com/NublyBR/go-vpk)
+
 Golang implementation of Valve's Pak format
 
 # Installation
