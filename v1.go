@@ -12,8 +12,9 @@ func openVPK_v1(fs FileReader, buffer []byte) (*vpk_impl, error) {
 	}
 
 	vpk := &vpk_impl{
-		stream:  fs,
-		version: 1,
+		stream:     fs,
+		version:    1,
+		headerSize: 4 * 3,
 
 		treeSize: int32(binary.LittleEndian.Uint32(buffer[:4])),
 

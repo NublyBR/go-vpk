@@ -3,6 +3,7 @@ package vpk
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -53,6 +54,10 @@ func treeReader(vpk VPK, reader *bufio.Reader, buffer []byte, cb func(entry *ent
 					archiveIndex: binary.LittleEndian.Uint16(buffer[6:8]),
 					entryOffset:  binary.LittleEndian.Uint32(buffer[8:12]),
 					entryLength:  binary.LittleEndian.Uint32(buffer[12:16]),
+				}
+
+				if entry.preloadBytes > 0 {
+					return errors.New("preload bytes not implemented yet")
 				}
 
 				cb(entry)

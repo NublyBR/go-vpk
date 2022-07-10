@@ -3,15 +3,18 @@
 [![GoDoc](https://godoc.org/github.com/NublyBR/go-vpk?status.png)](http://godoc.org/github.com/NublyBR/go-vpk)
 [![Go Report Card](https://goreportcard.com/badge/github.com/NublyBR/go-vpk)](https://goreportcard.com/report/github.com/NublyBR/go-vpk)
 
-Golang implementation of Valve's Pak format
+Golang implementation of a reader for Valve's Pak format (`.vpk`)
 
 # Installation
+
 ```
 $ go get -u github.com/NublyBR/go-vpk
 ```
 
 # Examples
+
 List all entries inside a `.vpk` dir file:
+
 ```go
 package main
 
@@ -36,7 +39,9 @@ func main() {
 	}
 }
 ```
+
 Example output:
+
 ```
     1517 gamepadui/schemetab.res
     2056 gamepadui/schemesavebutton.res

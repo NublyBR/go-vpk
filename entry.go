@@ -74,12 +74,10 @@ func (e *entry_impl) Length() uint32 {
 
 func (e *entry_impl) Open() (FileReader, error) {
 	if e.archiveIndex == 0x7fff {
-		return &EntryReader{
-			fs:       e.parent.stream,
-			closed:   false,
-			offset:   int64(e.entryOffset),
-			size:     int64(e.entryLength),
-			position: 0,
+		return &entryReader{
+			fs:     e.parent.stream,
+			offset: int64(e.parent.headerSize) + int64(e.parent.treeSize) + int64(e.entryOffset),
+			size:   int64(e.entryLength),
 		}, nil
 	}
 
@@ -87,11 +85,9 @@ func (e *entry_impl) Open() (FileReader, error) {
 		return nil, ErrInvalidArchiveIndex
 	}
 
-	return &EntryReader{
-		fs:       e.parent.indexes[e.archiveIndex],
-		closed:   false,
-		offset:   int64(e.entryOffset),
-		size:     int64(e.entryLength),
-		position: 0,
+	return &entryReader{
+		fs:     e.parent.indexes[e.archiveIndex],
+		offset: int64(e.entryOffset),
+		size:   int64(e.entryLength),
 	}, nil
 }

@@ -5,9 +5,10 @@ import (
 )
 
 type vpk_impl struct {
-	stream  FileReader
-	indexes []FileReader
-	version int
+	stream     FileReader
+	indexes    []FileReader
+	version    int
+	headerSize int
 
 	// The size, in bytes, of the directory tree
 	treeSize int32

@@ -10,6 +10,7 @@ var (
 	reDirPath = regexp.MustCompile(`_(dir|\d{3}).vpk$`)
 )
 
+// Open a VPK file with multiple index files.
 func OpenDir(path string) (VPK, error) {
 	find := reDirPath.FindString(path)
 	if find == "" {
