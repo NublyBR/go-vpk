@@ -36,6 +36,15 @@ type Entry interface {
 	// Length of VPK entry
 	Length() uint32
 
+	// Is filename and path safe to extract in linux/unix?
+	FilenameSafeUnix() bool
+
+	// Is filename and path safe to extract in windows?
+	FilenameSafeWindows() bool
+
 	// Open VPK entry for reading
 	Open() (FileReader, error)
+
+	// CRC of VPK entry
+	CRC() uint32
 }

@@ -1,9 +1,12 @@
 package vpk
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
-type entry_impl struct {
-	parent *vpk_impl
+type entry struct {
+	parent *vpk
 
 	ext  string
 	path string
@@ -28,7 +31,7 @@ type entry_impl struct {
 	entryLength uint32
 }
 
-func (e *entry_impl) Filename() string {
+func (e *entry) Filename() string {
 	var parts []string
 
 	if e.path != " " {
@@ -41,14 +44,18 @@ func (e *entry_impl) Filename() string {
 		} else {
 			parts = append(parts, e.file)
 		}
-	} else if e.ext != " " {
-		parts = append(parts, "."+e.ext)
+	} else {
+		if e.ext != " " {
+			parts = append(parts, "."+e.ext)
+		} else {
+			parts = append(parts, "")
+		}
 	}
 
 	return strings.Join(parts, "/")
 }
 
-func (e *entry_impl) Basename() string {
+func (e *entry) Basename() string {
 	if e.file != " " {
 		if e.ext != " " {
 			return e.file + "." + e.ext
@@ -61,18 +68,58 @@ func (e *entry_impl) Basename() string {
 	return ""
 }
 
-func (e *entry_impl) Path() string {
+func (e *entry) Path() string {
 	if e.path == " " {
 		return ""
 	}
 	return e.path
 }
 
-func (e *entry_impl) Length() uint32 {
+func (e *entry) Length() uint32 {
 	return e.entryLength
 }
 
-func (e *entry_impl) Open() (FileReader, error) {
+var (
+	reInvalidSegmentUnix = regexp.MustCompile(`^(\.\.?)$|\0`)
+	reInvalidSegmentWin  = regexp.MustCompile(`^(?i)(\.\.?|CON|PRN|AUX|NUL|COM\d|LPT\d|)$|[\0-\x1f<>:"\\|?*]|[\s\.]$`)
+	reRootWindows        = regexp.MustCompile(`^(?i)([A-Z]:|[\\/])`)
+	reInvalidFilename    = regexp.MustCompile(`[/]`)
+	reInvalidExt         = regexp.MustCompile(`[\./]`)
+)
+
+func (e *entry) FilenameSafeUnix() bool {
+	full := e.Filename()
+
+	if full == "" || strings.HasPrefix(full, "/") || reInvalidFilename.MatchString(e.file) || reInvalidExt.MatchString(e.ext) {
+		return false
+	}
+
+	for _, part := range strings.Split(full, "/") {
+		if reInvalidSegmentUnix.MatchString(part) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (e *entry) FilenameSafeWindows() bool {
+	full := e.Filename()
+
+	if full == "" || reRootWindows.MatchString(full) || reInvalidFilename.MatchString(e.file) || reInvalidExt.MatchString(e.ext) {
+		return false
+	}
+
+	for _, part := range strings.Split(full, "/") {
+		if reInvalidSegmentWin.MatchString(part) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (e *entry) Open() (FileReader, error) {
 	if e.archiveIndex == 0x7fff {
 		return &entryReader{
 			fs:     e.parent.stream,
@@ -90,4 +137,8 @@ func (e *entry_impl) Open() (FileReader, error) {
 		offset: int64(e.entryOffset),
 		size:   int64(e.entryLength),
 	}, nil
+}
+
+func (e *entry) CRC() uint32 {
+	return e.crc
 }

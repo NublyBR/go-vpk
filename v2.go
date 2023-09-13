@@ -6,12 +6,12 @@ import (
 	"io"
 )
 
-func openVPK_v2(fs FileReader, buffer []byte) (*vpk_impl, error) {
+func openVPK_v2(fs FileReader, buffer []byte) (*vpk, error) {
 	if _, err := fs.Read(buffer[:4*5]); err != nil {
 		return nil, err
 	}
 
-	vpk := &vpk_impl{
+	v := &vpk{
 		stream:     fs,
 		version:    2,
 		headerSize: 4 * 7,
@@ -22,21 +22,21 @@ func openVPK_v2(fs FileReader, buffer []byte) (*vpk_impl, error) {
 		otherMD5SectionSize:   int32(binary.LittleEndian.Uint32(buffer[12:16])),
 		signatureSectionSize:  int32(binary.LittleEndian.Uint32(buffer[16:20])),
 
-		pathMap: make(map[string]*entry_impl),
+		pathMap: make(map[string]*entry),
 	}
 
-	reader := bufio.NewReader(io.LimitReader(fs, int64(vpk.treeSize)))
+	reader := bufio.NewReader(io.LimitReader(fs, int64(v.treeSize)))
 
-	if err := treeReader(vpk, reader, buffer, vpk.addFile); err != nil {
-		defer vpk.Close()
+	if err := treeReader(v, reader, buffer, v.addFile); err != nil {
+		defer v.Close()
 		return nil, err
 	}
 
 	// We should have read exactly .treeSize bytes and therefore hit EOF
 	if _, err := reader.ReadByte(); err != io.EOF {
-		defer vpk.Close()
+		defer v.Close()
 		return nil, ErrWrongHeaderSize
 	}
 
-	return vpk, nil
+	return v, nil
 }

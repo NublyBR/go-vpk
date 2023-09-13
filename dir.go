@@ -21,12 +21,12 @@ func OpenDir(path string) (VPK, error) {
 
 	dir := fmt.Sprintf("%s_dir.vpk", noext)
 
-	vpk, err := OpenSingle(dir)
+	v, err := OpenSingle(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	v2, ok := vpk.(*vpk_impl)
+	v2, ok := v.(*vpk)
 	if !ok {
 		return nil, ErrInvalidVPKVersion
 	}
@@ -46,5 +46,5 @@ func OpenDir(path string) (VPK, error) {
 		v2.indexes = append(v2.indexes, ifs)
 	}
 
-	return vpk, nil
+	return v, nil
 }

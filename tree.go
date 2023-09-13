@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-func treeReader(vpk VPK, reader *bufio.Reader, buffer []byte, cb func(entry *entry_impl)) error {
+func treeReader(v VPK, reader *bufio.Reader, buffer []byte, cb func(e *entry)) error {
 	var (
 		ext, path, file []byte
 		err             error
@@ -44,7 +44,7 @@ func treeReader(vpk VPK, reader *bufio.Reader, buffer []byte, cb func(entry *ent
 					return err
 				}
 
-				entry := &entry_impl{
+				entry := &entry{
 					ext:  string(ext[:len(ext)-1]),
 					path: string(path[:len(path)-1]),
 					file: string(file[:len(file)-1]),

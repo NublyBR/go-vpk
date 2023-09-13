@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-type vpk_impl struct {
+type vpk struct {
 	stream     FileReader
 	indexes    []FileReader
 	version    int
@@ -25,17 +25,17 @@ type vpk_impl struct {
 	// The size, in bytes, of the section containing the public key and signature. This is either 0 (CSGO & The Ship) or 296 (HL2, HL2:DM, HL2:EP1, HL2:EP2, HL2:LC, TF2, DOD:S & CS:S)
 	signatureSectionSize int32
 
-	files   []*entry_impl
-	pathMap map[string]*entry_impl
+	files   []*entry
+	pathMap map[string]*entry
 }
 
-func (v *vpk_impl) addFile(entry *entry_impl) {
-	v.files = append(v.files, entry)
-	v.pathMap[entry.Filename()] = entry
-	entry.parent = v
+func (v *vpk) addFile(e *entry) {
+	v.files = append(v.files, e)
+	v.pathMap[e.Filename()] = e
+	e.parent = v
 }
 
-func (v *vpk_impl) Open(path string) (FileReader, error) {
+func (v *vpk) Open(path string) (FileReader, error) {
 	entry, ok := v.pathMap[path]
 	if !ok {
 		return nil, os.ErrNotExist
@@ -44,7 +44,7 @@ func (v *vpk_impl) Open(path string) (FileReader, error) {
 	return entry.Open()
 }
 
-func (v *vpk_impl) Entries() []Entry {
+func (v *vpk) Entries() []Entry {
 	ret := make([]Entry, len(v.files))
 	for i, f := range v.files {
 		ret[i] = f
@@ -52,13 +52,13 @@ func (v *vpk_impl) Entries() []Entry {
 	return ret
 }
 
-func (v *vpk_impl) Find(path string) (Entry, bool) {
+func (v *vpk) Find(path string) (Entry, bool) {
 	entry, ok := v.pathMap[path]
 
 	return entry, ok
 }
 
-func (v *vpk_impl) Close() error {
+func (v *vpk) Close() error {
 	v.stream.Close()
 
 	for _, f := range v.indexes {

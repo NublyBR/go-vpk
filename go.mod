@@ -1,3 +1,3 @@
 module github.com/NublyBR/go-vpk
 
-go 1.18
+go 1.21
