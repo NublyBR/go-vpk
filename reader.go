@@ -1,6 +1,8 @@
 package vpk
 
 import (
+	"crypto/md5"
+	"hash"
 	"io"
 	"os"
 )
@@ -82,5 +84,38 @@ func (e *entryReader) Close() error {
 		return os.ErrClosed
 	}
 	e.closed = true
+	return nil
+}
+
+func hashReader(r io.Reader) (io.Reader, hash.Hash) {
+	hasher := md5.New()
+	cReader := io.TeeReader(r, hasher)
+	return cReader, hasher
+}
+
+// nullBufferedRead provides a way to "read away" the provided number of bytes from a
+// reader using a pre-defined buffer (to save on memory). The bytes that are read will
+// be discarded.
+func nullBufferedRead(r io.Reader, buffer []byte, size int) error {
+	count := 0
+
+	for count < size {
+		limit := len(buffer)
+
+		if size-count < len(buffer) {
+			limit = size - count
+		}
+
+		_, err := io.ReadFull(r, buffer[:limit])
+		if err != nil {
+			return err
+		}
+
+		count += limit
+	}
+
+	// reset buffer to leave out any remnants of previous reads
+	buffer = buffer[:0]
+
 	return nil
 }
