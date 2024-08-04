@@ -29,6 +29,8 @@ type entry struct {
 	// If zero, the entire file is stored in the preload data.
 	// Otherwise, the number of bytes stored starting at EntryOffset.
 	entryLength uint32
+
+	preloadDatas []byte
 }
 
 func (e *entry) Filename() string {
@@ -122,9 +124,11 @@ func (e *entry) FilenameSafeWindows() bool {
 func (e *entry) Open() (FileReader, error) {
 	if e.archiveIndex == 0x7fff {
 		return &entryReader{
-			fs:     e.parent.stream,
-			offset: int64(e.parent.headerSize) + int64(e.parent.treeSize) + int64(e.entryOffset),
-			size:   int64(e.entryLength),
+			fs:           e.parent.stream,
+			offset:       int64(e.parent.headerSize) + int64(e.parent.treeSize) + int64(e.entryOffset),
+			size:         int64(e.entryLength + uint32(e.preloadBytes)),
+			preloadBytes: int64(e.preloadBytes),
+			preloadDatas: e.preloadDatas,
 		}, nil
 	}
 
@@ -133,9 +137,11 @@ func (e *entry) Open() (FileReader, error) {
 	}
 
 	return &entryReader{
-		fs:     e.parent.indexes[e.archiveIndex],
-		offset: int64(e.entryOffset),
-		size:   int64(e.entryLength),
+		fs:           e.parent.indexes[e.archiveIndex],
+		offset:       int64(e.entryOffset),
+		size:         int64(e.entryLength + uint32(e.preloadBytes)),
+		preloadBytes: int64(e.preloadBytes),
+		preloadDatas: e.preloadDatas,
 	}, nil
 }
 
