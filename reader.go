@@ -15,6 +15,9 @@ type entryReader struct {
 	offset   int64
 	size     int64
 	position int64
+
+	preloadBytes int64
+	preloadDatas []byte
 }
 
 func (e *entryReader) Read(p []byte) (int, error) {
@@ -31,7 +34,7 @@ func (e *entryReader) Read(p []byte) (int, error) {
 		want = e.size - e.position
 	}
 
-	n, err := e.fs.ReadAt(p[:want], e.offset+e.position)
+	n, err := e.ReadAt(p[:want], e.position)
 	e.position += int64(n)
 
 	return n, err
@@ -47,13 +50,32 @@ func (e *entryReader) ReadAt(p []byte, off int64) (int, error) {
 
 	want := int64(len(p))
 
-	if off+want > e.size {
-		want = e.size - off
+	if off < e.preloadBytes {
+		if off+want <= e.preloadBytes {
+			if copied := copy(p, e.preloadDatas[off:off+want]); copied == int(want) {
+				return copied, nil
+			} else {
+				return copied, io.EOF
+			}
+		} else {
+			l1 := int(e.preloadBytes - off)
+			if copied := copy(p, e.preloadDatas[off:]); copied != l1 {
+				return copied, io.EOF
+			} else {
+				l2, err := e.ReadAt(p[l1:], e.preloadBytes)
+				return l1 + l2, err
+			}
+		}
+	} else {
+		off = off - e.preloadBytes
+		if off+want > e.size {
+			want = e.size - off
+		}
+
+		n, err := e.fs.ReadAt(p[:want], e.offset+off)
+
+		return n, err
 	}
-
-	n, err := e.fs.ReadAt(p[:want], e.offset+off)
-
-	return n, err
 }
 
 func (e *entryReader) Seek(offset int64, whence int) (int64, error) {
